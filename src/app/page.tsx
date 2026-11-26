@@ -1,14 +1,16 @@
 import Link from 'next/link';
 import { 
-  BookOpen, 
-  CalendarCheck, 
-  Users, 
+  Layers, 
   Clock, 
+  Users, 
   ShieldCheck, 
-  Zap, 
-  CheckCircle2, 
   ArrowRight,
-  Sparkles
+  Sparkles,
+  Check,
+  Monitor,
+  Wifi,
+  VolumeX,
+  CalendarCheck2
 } from 'lucide-react';
 import { createClient } from '@/utils/supabase/server';
 
@@ -23,158 +25,163 @@ export default async function HomePage() {
       .limit(4);
     if (data) salas = data;
   } catch (e) {
-    // Fallback if not connected yet
+    // Fallback
   }
 
-  // Fallback demo rooms if Supabase is still connecting
   const displaySalas = salas.length > 0 ? salas : [
     {
       id: '1',
-      nombre: 'Sala A - Silenciosa e Individual',
+      nombre: 'Cubículo 101 - Silencio e Investigación',
       capacidad: 4,
-      ubicacion: 'Piso 1 - Ala Norte',
-      equipamiento: 'Escritorios ergonómicos, lámparas LED y tomas de red',
+      ubicacion: 'Nivel 1 • Ala Norte',
+      equipamiento: 'Escritorios ergonómicos, lámparas LED regulables, tomas Gigabit Ethernet',
     },
     {
       id: '2',
-      nombre: 'Sala B - Trabajo Colaborativo',
+      nombre: 'Sala Colaborativa B - Equipos y Proyectos',
       capacidad: 8,
-      ubicacion: 'Piso 1 - Ala Sur',
-      equipamiento: 'Mesa redonda, Pizarrón magnético y Pantalla 55" HDMI',
+      ubicacion: 'Nivel 1 • Ala Sur',
+      equipamiento: 'Pizarrón magnético de cristal templado, Pantalla 55" 4K HDMI/AirPlay',
     },
     {
       id: '3',
-      nombre: 'Sala C - Multimedia y Videoconferencias',
+      nombre: 'Estudio Multimedia C - Grabación y Meet',
       capacidad: 6,
-      ubicacion: 'Piso 2 - Centro de Medios',
-      equipamiento: 'Cámara 4K, audio para videollamadas y Smart TV 65"',
+      ubicacion: 'Nivel 2 • Centro de Medios',
+      equipamiento: 'Cámara 4K con auto-framing, array de micrófonos de techo, Smart TV 65"',
     },
     {
       id: '4',
-      nombre: 'Sala D - Tesis e Investigación',
-      capacidad: 3,
-      ubicacion: 'Piso 2 - Ala Poniente',
-      equipamiento: 'Aislamiento acústico de alto nivel y monitor dual',
+      nombre: 'Cabina Individual D - Concentración Pura',
+      capacidad: 2,
+      ubicacion: 'Nivel 2 • Zona Silente',
+      equipamiento: 'Aislamiento acústico STC 45, soporte dual para monitores',
     },
   ];
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-between">
       {/* Hero Section */}
-      <section className="w-full bg-gradient-to-b from-indigo-50/70 via-white to-slate-50 py-16 sm:py-24 border-b border-slate-200">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-semibold uppercase tracking-wider mb-6">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Biblioteca Universitaria • Reservaciones en Línea</span>
+      <section className="relative overflow-hidden pt-12 pb-20 sm:pt-20 sm:pb-28 border-b border-slate-200/80 bg-white">
+        <div className="absolute inset-0 bg-grid-pattern opacity-60 pointer-events-none" />
+
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          {/* Status pill */}
+          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200/90 text-slate-700 text-xs font-mono mb-8">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Sistema Operativo • Biblioteca Universitaria</span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight">
-            Encuentra y Reserva tu <br className="hidden sm:inline" />
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600">
-              Espacio de Estudio Ideal
-            </span>
+          <h1 className="text-4xl sm:text-6xl font-black text-slate-900 tracking-tight leading-[1.1]">
+            Reserva de Cubículos <br />
+            <span className="text-slate-400 font-normal">sin fricción ni traslapes.</span>
           </h1>
 
-          <p className="mt-6 text-lg sm:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-            Gestiona tus turnos de estudio con confirmación instantánea y validación
-            automática anti-traslape de horarios. Diseñado para estudiantes y docentes.
+          <p className="mt-6 text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed font-normal">
+            Plataforma institucional para estudiantes y académicos. Consulta disponibilidad en tiempo real, reserva turnos exactos y asegura tu espacio de estudio con validación estricta de concurrencia.
           </p>
 
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
               href="/dashboard"
-              className="w-full sm:w-auto inline-flex items-center justify-center px-7 py-3.5 rounded-xl bg-indigo-600 text-white font-semibold shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:shadow-indigo-300 transition-all duration-200 text-base group"
+              className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 rounded-xl bg-slate-900 text-white font-medium text-xs shadow-sm hover:bg-slate-800 transition group"
             >
-              <span>Acceder al Sistema</span>
-              <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              <span>Ir al Panel de Reservas</span>
+              <ArrowRight className="w-3.5 h-3.5 ml-2 group-hover:translate-x-0.5 transition-transform text-slate-400" />
             </Link>
 
             <Link
               href="/registro"
-              className="w-full sm:w-auto inline-flex items-center justify-center px-7 py-3.5 rounded-xl bg-white border border-slate-300 text-slate-700 font-semibold shadow-sm hover:bg-slate-50 transition duration-200 text-base"
+              className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 rounded-xl bg-white border border-slate-300 text-slate-700 font-medium text-xs hover:bg-slate-50 transition"
             >
-              Registrar Cuenta Institucional
+              Registro Institucional
             </Link>
           </div>
 
-          {/* Quick Features pill list */}
-          <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto pt-8 border-t border-slate-200/60">
-            <div className="flex items-center space-x-2.5 text-slate-700 text-sm justify-center">
-              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-              <span>Validación Anti-traslapes</span>
+          {/* Quick status counters */}
+          <div className="mt-14 pt-8 border-t border-slate-100 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto text-left">
+            <div className="p-3 bg-slate-50/80 rounded-xl border border-slate-200/60">
+              <span className="text-[11px] font-mono uppercase text-slate-400 block">Horario</span>
+              <span className="text-sm font-bold text-slate-800">07:00 — 21:30 hrs</span>
             </div>
-            <div className="flex items-center space-x-2.5 text-slate-700 text-sm justify-center">
-              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-              <span>Filtros en Tiempo Real</span>
+            <div className="p-3 bg-slate-50/80 rounded-xl border border-slate-200/60">
+              <span className="text-[11px] font-mono uppercase text-slate-400 block">Capacidad</span>
+              <span className="text-sm font-bold text-slate-800">2 a 8 estudiantes</span>
             </div>
-            <div className="flex items-center space-x-2.5 text-slate-700 text-sm justify-center">
-              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-              <span>Gestión de Estados</span>
+            <div className="p-3 bg-slate-50/80 rounded-xl border border-slate-200/60">
+              <span className="text-[11px] font-mono uppercase text-slate-400 block">Validación RNF08</span>
+              <span className="text-sm font-bold text-emerald-600 flex items-center">
+                <Check className="w-3.5 h-3.5 mr-1" /> Cero Conflictos
+              </span>
             </div>
-            <div className="flex items-center space-x-2.5 text-slate-700 text-sm justify-center">
-              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-              <span>Panel de Administración</span>
+            <div className="p-3 bg-slate-50/80 rounded-xl border border-slate-200/60">
+              <span className="text-[11px] font-mono uppercase text-slate-400 block">Autenticación</span>
+              <span className="text-sm font-bold text-slate-800">Supabase Auth</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Featured Rooms Section */}
-      <section className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10">
+      {/* Cubicles Catalog */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 pb-4 border-b border-slate-200">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">
-              Salas de Estudio Disponibles
+            <span className="text-xs font-mono uppercase text-slate-400 tracking-wider">
+              Infraestructura
+            </span>
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mt-1">
+              Espacios de Estudio Activos
             </h2>
-            <p className="mt-2 text-slate-600">
-              Espacios climatizados, aislados acústicamente y equipados con tecnología moderna.
-            </p>
           </div>
-          <Link
-            href="/dashboard"
-            className="mt-4 md:mt-0 text-sm font-semibold text-indigo-600 hover:text-indigo-800 flex items-center"
-          >
-            Ver disponibilidad en el Dashboard <ArrowRight className="w-4 h-4 ml-1" />
-          </Link>
+          <p className="text-xs text-slate-500 mt-2 sm:mt-0">
+            Equipamiento verificado para el periodo académico vigente
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {displaySalas.map((sala) => (
             <div
               key={sala.id}
-              className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden flex flex-col justify-between"
+              className="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col justify-between hover:border-slate-300 transition"
             >
               <div>
                 <div className="flex items-start justify-between">
-                  <h3 className="text-lg font-bold text-slate-900">{sala.nombre}</h3>
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700">
-                    <Users className="w-3.5 h-3.5 mr-1" />
-                    Capacidad: {sala.capacidad} personas
+                  <h3 className="font-bold text-slate-900 text-sm tracking-tight">
+                    {sala.nombre}
+                  </h3>
+                  <span className="font-mono text-[11px] px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md">
+                    {sala.capacidad} pers.
                   </span>
                 </div>
 
-                <p className="mt-2 text-xs font-medium text-slate-500 flex items-center">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>
-                  {sala.ubicacion}
-                </p>
+                <div className="flex items-center text-xs text-slate-500 mt-2 space-x-3">
+                  <span>{sala.ubicacion}</span>
+                  <span>•</span>
+                  <span className="text-emerald-600 font-medium flex items-center">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5" />
+                    Disponible
+                  </span>
+                </div>
 
                 {sala.equipamiento && (
-                  <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-600">
-                    <p className="font-semibold text-slate-700 mb-1">Equipamiento:</p>
-                    <p>{sala.equipamiento}</p>
-                  </div>
+                  <p className="mt-4 text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    <span className="font-semibold text-slate-700 block mb-0.5 font-mono text-[10px] uppercase">
+                      Equipamiento
+                    </span>
+                    {sala.equipamiento}
+                  </p>
                 )}
               </div>
 
               <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
-                <span className="text-xs text-emerald-600 font-medium flex items-center">
-                  <Zap className="w-3.5 h-3.5 mr-1" /> Lista para reservar
+                <span className="text-[11px] font-mono text-slate-400">
+                  Turnos de 1 a 4 horas
                 </span>
                 <Link
                   href="/dashboard"
-                  className="px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold transition"
+                  className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold transition"
                 >
-                  Reservar Turno
+                  Reservar este espacio
                 </Link>
               </div>
             </div>
@@ -182,35 +189,36 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* System Integrity (RNF08) Callout */}
-      <section className="w-full bg-slate-900 text-white py-16">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
-            <div className="lg:col-span-2">
-              <span className="text-indigo-400 font-semibold text-xs tracking-wider uppercase">
-                Integridad y Reglas de Negocio (RNF08)
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-bold mt-2">
-                Cero Conflictos de Horario con Verificación en Doble Capa
+      {/* Anti-Overlap Engine (RNF08) Showcase */}
+      <section className="bg-slate-900 text-white py-16 border-t border-slate-800">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            <div>
+              <div className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-emerald-400 text-[11px] font-mono mb-4">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Requisito No Funcional RNF08</span>
+              </div>
+              <h2 className="text-2xl font-bold tracking-tight">
+                Consistencia Estricta Anti-Traslapes
               </h2>
-              <p className="mt-4 text-slate-300 text-sm sm:text-base leading-relaxed">
-                Nuestra arquitectura previene que dos usuarios reserven la misma sala en rangos
-                traslapados. Cuenta con validación matemática en el servidor de Next.js y un
-                Trigger de integridad en PostgreSQL (Supabase) con políticas RLS de máxima seguridad.
+              <p className="mt-3 text-slate-400 text-xs sm:text-sm leading-relaxed">
+                Ningún cubículo puede ser asignado dos veces en el mismo horario. Cada solicitud se verifica matemáticamente en la Server Action y se audita mediante un trigger de PostgreSQL antes de confirmar la transacción.
               </p>
             </div>
-            <div className="bg-slate-800/80 p-6 rounded-2xl border border-slate-700">
-              <div className="flex items-center space-x-3 mb-3 text-indigo-400">
-                <Clock className="w-5 h-5" />
-                <span className="font-bold text-sm text-white">Regla de Traslape</span>
-              </div>
-              <code className="text-xs font-mono text-indigo-300 block bg-slate-950 p-3 rounded-lg overflow-x-auto">
-                (hora_inicio &lt; existente.fin) <br />
-                AND (hora_fin &gt; existente.inicio)
-              </code>
-              <p className="text-xs text-slate-400 mt-3">
-                Cualquier reservación en conflicto es rechazada inmediatamente informando el motivo exacto.
+
+            <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 font-mono text-xs text-slate-300">
+              <span className="text-slate-500 block mb-2 text-[10px] uppercase">
+                // Regla lógica evaluada en PostgreSQL & Next.js
+              </span>
+              <p className="text-emerald-400">
+                WHERE estado != &apos;cancelada&apos; <br />
+                &nbsp;&nbsp;AND (nuevo_inicio &lt; fin_existente) <br />
+                &nbsp;&nbsp;AND (nuevo_fin &gt; inicio_existente);
               </p>
+              <div className="mt-4 pt-3 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
+                <span>Resultado de evaluación:</span>
+                <span className="text-emerald-400 font-bold">CONFLICT_FREE_GUARANTEE</span>
+              </div>
             </div>
           </div>
         </div>

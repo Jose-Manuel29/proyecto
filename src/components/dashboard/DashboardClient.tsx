@@ -8,18 +8,18 @@ import {
   Users, 
   Plus, 
   Filter, 
-  CheckCircle2, 
-  Clock3, 
-  AlertTriangle, 
-  XCircle, 
-  Edit3, 
+  Check, 
+  AlertCircle, 
+  X, 
+  Edit2, 
   Trash2, 
   Search, 
   RotateCcw,
-  BookOpen,
   MapPin,
-  X,
-  ChevronDown
+  ChevronDown,
+  LayoutGrid,
+  ListFilter,
+  Sparkles
 } from 'lucide-react';
 import { Reservacion, Sala, Profile, ReservationStatus } from '@/types/database';
 import { 
@@ -88,19 +88,9 @@ export default function DashboardClient({
   // Real-time Filtered Reservations (RF10)
   const filteredReservations = useMemo(() => {
     return initialReservations.filter((res) => {
-      // Filter by Sala
-      if (selectedSala !== 'all' && res.sala_id !== selectedSala) {
-        return false;
-      }
-      // Filter by Estado
-      if (selectedEstado !== 'all' && res.estado !== selectedEstado) {
-        return false;
-      }
-      // Filter by Fecha
-      if (selectedFecha && res.fecha !== selectedFecha) {
-        return false;
-      }
-      // Filter by search query (motivo or room name)
+      if (selectedSala !== 'all' && res.sala_id !== selectedSala) return false;
+      if (selectedEstado !== 'all' && res.estado !== selectedEstado) return false;
+      if (selectedFecha && res.fecha !== selectedFecha) return false;
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         const roomName = res.sala?.nombre?.toLowerCase() || '';
@@ -112,6 +102,14 @@ export default function DashboardClient({
       return true;
     });
   }, [initialReservations, selectedSala, selectedEstado, selectedFecha, searchQuery]);
+
+  // Quick preset hour setter in create modal
+  const applyTimePreset = (formElement: HTMLFormElement, start: string, end: string) => {
+    const startInput = formElement.querySelector<HTMLInputElement>('input[name="hora_inicio"]');
+    const endInput = formElement.querySelector<HTMLInputElement>('input[name="hora_fin"]');
+    if (startInput) startInput.value = start;
+    if (endInput) endInput.value = end;
+  };
 
   // Handle Create Reservation
   const handleCreateSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -152,7 +150,7 @@ export default function DashboardClient({
     }
   };
 
-  // Handle Cancel Reservation (RF06 with confirmation modal)
+  // Handle Cancel Reservation (RF06)
   const handleConfirmCancel = async () => {
     if (!cancelingReservation) return;
     setActionLoading(true);
@@ -180,7 +178,6 @@ export default function DashboardClient({
     router.refresh();
   };
 
-  // Reset filters
   const resetFilters = () => {
     setSelectedSala('all');
     setSelectedEstado('all');
@@ -188,31 +185,30 @@ export default function DashboardClient({
     setSearchQuery('');
   };
 
-  // Status Badge Colors & Labels
   const getStatusBadge = (estado: ReservationStatus) => {
     switch (estado) {
       case 'pendiente':
         return {
-          bg: 'bg-amber-100 text-amber-800 border-amber-200',
-          icon: <Clock3 className="w-3.5 h-3.5 mr-1" />,
+          pill: 'bg-amber-50 text-amber-700 border-amber-200/80',
+          dot: 'bg-amber-500',
           label: 'Pendiente',
         };
       case 'confirmada':
         return {
-          bg: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-          icon: <CheckCircle2 className="w-3.5 h-3.5 mr-1" />,
-          label: 'Confirmada / Próxima',
+          pill: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
+          dot: 'bg-emerald-500',
+          label: 'Confirmada',
         };
       case 'finalizada':
         return {
-          bg: 'bg-indigo-100 text-indigo-800 border-indigo-200',
-          icon: <CheckCircle2 className="w-3.5 h-3.5 mr-1" />,
+          pill: 'bg-slate-100 text-slate-700 border-slate-200',
+          dot: 'bg-slate-400',
           label: 'Finalizada',
         };
       case 'cancelada':
         return {
-          bg: 'bg-slate-100 text-slate-600 border-slate-200',
-          icon: <XCircle className="w-3.5 h-3.5 mr-1" />,
+          pill: 'bg-slate-50 text-slate-400 border-slate-200 line-through',
+          dot: 'bg-slate-300',
           label: 'Cancelada',
         };
     }
@@ -220,15 +216,19 @@ export default function DashboardClient({
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Header with Title and Create Button */}
+      {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-slate-200 gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Panel de Reservaciones
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Bienvenido, <span className="font-semibold text-slate-700">{profile?.nombre_completo || 'Estudiante'}</span>. 
-            Gestiona tus turnos de salas de estudio en la biblioteca.
+          <div className="flex items-center space-x-2">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+              Mis Reservaciones
+            </h1>
+            <span className="text-xs font-mono text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
+              {stats.total} total
+            </span>
+          </div>
+          <p className="mt-1 text-xs text-slate-500">
+            Control de cubículos para <span className="font-semibold text-slate-700">{profile?.nombre_completo || 'Estudiante'}</span>
           </p>
         </div>
 
@@ -237,97 +237,80 @@ export default function DashboardClient({
             setFormError(null);
             setIsCreateModalOpen(true);
           }}
-          className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-md shadow-indigo-200 hover:shadow-indigo-300 transition-all shrink-0 space-x-2"
+          className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs shadow-sm transition space-x-2 shrink-0"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-3.5 h-3.5" />
           <span>Nueva Reservación</span>
         </button>
       </div>
 
-      {/* RF11: Dashboard Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Pendientes
-            </p>
-            <p className="text-2xl font-bold text-amber-600 mt-1">{stats.pendientes}</p>
-            <p className="text-[11px] text-slate-400 mt-0.5">En espera de turno</p>
-          </div>
-          <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-            <Clock3 className="w-6 h-6" />
+      {/* RF11: Dashboard Metrics (Clean & Modern) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 mt-6">
+        <div className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-sm">
+          <span className="text-[11px] font-mono uppercase text-slate-400 block font-medium">
+            Pendientes
+          </span>
+          <div className="mt-1.5 flex items-baseline space-x-2">
+            <span className="text-2xl font-bold font-mono text-slate-900">{stats.pendientes}</span>
+            <span className="text-[11px] text-amber-600 font-medium">en espera</span>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Próximas (Confirmadas)
-            </p>
-            <p className="text-2xl font-bold text-emerald-600 mt-1">{stats.confirmadas}</p>
-            <p className="text-[11px] text-slate-400 mt-0.5">Turnos activos listos</p>
-          </div>
-          <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-            <Calendar className="w-6 h-6" />
+        <div className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-sm">
+          <span className="text-[11px] font-mono uppercase text-slate-400 block font-medium">
+            Próximas (Confirmadas)
+          </span>
+          <div className="mt-1.5 flex items-baseline space-x-2">
+            <span className="text-2xl font-bold font-mono text-emerald-600">{stats.confirmadas}</span>
+            <span className="text-[11px] text-emerald-600 font-medium">listas para uso</span>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Finalizadas
-            </p>
-            <p className="text-2xl font-bold text-indigo-600 mt-1">{stats.finalizadas}</p>
-            <p className="text-[11px] text-slate-400 mt-0.5">Completadas con éxito</p>
-          </div>
-          <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-            <CheckCircle2 className="w-6 h-6" />
+        <div className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-sm">
+          <span className="text-[11px] font-mono uppercase text-slate-400 block font-medium">
+            Finalizadas
+          </span>
+          <div className="mt-1.5 flex items-baseline space-x-2">
+            <span className="text-2xl font-bold font-mono text-slate-900">{stats.finalizadas}</span>
+            <span className="text-[11px] text-slate-400 font-medium">completadas</span>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Total Reservaciones
-            </p>
-            <p className="text-2xl font-bold text-slate-800 mt-1">{stats.total}</p>
-            <p className="text-[11px] text-slate-400 mt-0.5">
-              {stats.canceladas} canceladas
-            </p>
-          </div>
-          <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center">
-            <BookOpen className="w-6 h-6" />
+        <div className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-sm">
+          <span className="text-[11px] font-mono uppercase text-slate-400 block font-medium">
+            Liberadas / Canceladas
+          </span>
+          <div className="mt-1.5 flex items-baseline space-x-2">
+            <span className="text-2xl font-bold font-mono text-slate-500">{stats.canceladas}</span>
+            <span className="text-[11px] text-slate-400 font-medium">espacio devuelto</span>
           </div>
         </div>
       </div>
 
       {/* RF10: Filter Bar */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 mt-8 shadow-sm">
-        <div className="flex items-center justify-between mb-3 text-xs font-bold text-slate-600 uppercase tracking-wider">
-          <div className="flex items-center space-x-1.5">
-            <Filter className="w-4 h-4 text-indigo-600" />
-            <span>Filtros en Tiempo Real</span>
+      <div className="bg-white rounded-xl border border-slate-200 p-4 mt-6 shadow-sm">
+        <div className="flex items-center justify-between mb-3 text-xs">
+          <div className="flex items-center space-x-2 font-semibold text-slate-700">
+            <ListFilter className="w-3.5 h-3.5 text-slate-500" />
+            <span>Filtros en tiempo real</span>
           </div>
           {(selectedSala !== 'all' || selectedEstado !== 'all' || selectedFecha !== '' || searchQuery !== '') && (
             <button
               onClick={resetFilters}
-              className="text-indigo-600 hover:text-indigo-800 flex items-center font-semibold lowercase first-letter:uppercase"
+              className="text-xs text-slate-500 hover:text-slate-900 flex items-center font-medium"
             >
-              <RotateCcw className="w-3.5 h-3.5 mr-1" /> Limpiar filtros
+              <RotateCcw className="w-3 h-3 mr-1" /> Restablecer filtros
             </button>
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {/* Sala Filter */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+          {/* Sala */}
           <div>
-            <label className="block text-[11px] font-semibold text-slate-500 mb-1">
-              Filtrar por Sala
-            </label>
             <select
               value={selectedSala}
               onChange={(e) => setSelectedSala(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+              className="w-full px-3 py-1.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-slate-900 bg-slate-50/50"
             >
               <option value="all">Todas las Salas</option>
               {salas.map((sala) => (
@@ -338,15 +321,12 @@ export default function DashboardClient({
             </select>
           </div>
 
-          {/* Estado Filter */}
+          {/* Estado */}
           <div>
-            <label className="block text-[11px] font-semibold text-slate-500 mb-1">
-              Filtrar por Estado
-            </label>
             <select
               value={selectedEstado}
               onChange={(e) => setSelectedEstado(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+              className="w-full px-3 py-1.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-slate-900 bg-slate-50/50"
             >
               <option value="all">Todos los Estados</option>
               <option value="pendiente">Pendiente</option>
@@ -356,173 +336,137 @@ export default function DashboardClient({
             </select>
           </div>
 
-          {/* Fecha Filter */}
+          {/* Fecha */}
           <div>
-            <label className="block text-[11px] font-semibold text-slate-500 mb-1">
-              Filtrar por Fecha
-            </label>
             <input
               type="date"
               value={selectedFecha}
               onChange={(e) => setSelectedFecha(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+              className="w-full px-3 py-1.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-slate-900 bg-slate-50/50"
             />
           </div>
 
-          {/* Search Query */}
-          <div>
-            <label className="block text-[11px] font-semibold text-slate-500 mb-1">
-              Búsqueda de Motivo
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Ej. Tesis, Examen..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-            </div>
+          {/* Búsqueda */}
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Buscar por motivo..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-slate-900 bg-slate-50/50"
+            />
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2" />
           </div>
         </div>
       </div>
 
-      {/* Reservations List / Cards (RF04, RF05, RF06, RF09) */}
-      <div className="mt-8 space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-slate-800">
-            Listado de Reservaciones ({filteredReservations.length})
-          </h2>
-          {actionLoading && (
-            <span className="text-xs text-indigo-600 font-semibold flex items-center animate-pulse">
-              Actualizando...
-            </span>
-          )}
-        </div>
-
+      {/* Reservations List (RF04, RF05, RF06, RF09) */}
+      <div className="mt-6 space-y-3">
         {filteredReservations.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center">
-            <BookOpen className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <h3 className="text-base font-bold text-slate-800">No se encontraron reservaciones</h3>
-            <p className="text-sm text-slate-500 max-w-sm mx-auto mt-1">
-              No hay reservaciones que coincidan con los filtros seleccionados o aún no has creado ninguna.
+          <div className="bg-white rounded-xl border border-dashed border-slate-200 p-12 text-center">
+            <Calendar className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+            <h3 className="text-xs font-bold text-slate-700">Sin reservaciones encontradas</h3>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              No hay turnos registrados con el filtro actual.
             </p>
             <button
               onClick={() => {
                 resetFilters();
                 setIsCreateModalOpen(true);
               }}
-              className="mt-4 px-4 py-2 bg-indigo-50 text-indigo-600 font-semibold text-xs rounded-xl hover:bg-indigo-100 transition"
+              className="mt-3 px-3 py-1.5 bg-slate-900 text-white font-semibold text-xs rounded-lg hover:bg-slate-800 transition"
             >
               Crear Nueva Reservación
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 gap-3">
             {filteredReservations.map((res) => {
               const badge = getStatusBadge(res.estado);
               const room = res.sala;
-              const isPast = new Date(`${res.fecha}T${res.hora_fin}`) < new Date();
 
               return (
                 <div
                   key={res.id}
-                  className={`bg-white rounded-2xl border p-5 transition-all shadow-sm hover:shadow ${
+                  className={`bg-white rounded-xl border p-4 transition-all ${
                     res.estado === 'cancelada'
-                      ? 'border-slate-200 opacity-75 bg-slate-50/50'
-                      : 'border-slate-200/90'
+                      ? 'border-slate-200 bg-slate-50/40 opacity-70'
+                      : 'border-slate-200/90 shadow-sm hover:border-slate-300'
                   }`}
                 >
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    {/* Room & Time Info */}
-                    <div className="space-y-1.5 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-bold text-slate-900 text-base">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-slate-900 text-sm">
                           {room?.nombre || 'Sala de Estudio'}
                         </span>
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${badge.bg}`}
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border ${badge.pill}`}
                         >
-                          {badge.icon}
+                          <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${badge.dot}`} />
                           {badge.label}
                         </span>
-                        {isPast && res.estado !== 'finalizada' && res.estado !== 'cancelada' && (
-                          <span className="text-[10px] text-slate-400 font-medium">
-                            (Horario transcurrido)
-                          </span>
-                        )}
                       </div>
 
-                      <div className="flex flex-wrap items-center text-xs text-slate-600 gap-y-1 gap-x-4">
-                        <div className="flex items-center">
-                          <Calendar className="w-3.5 h-3.5 mr-1 text-slate-400" />
-                          <span className="font-medium text-slate-800">{res.fecha}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <Clock className="w-3.5 h-3.5 mr-1 text-slate-400" />
-                          <span>
-                            {res.hora_inicio.slice(0, 5)} - {res.hora_fin.slice(0, 5)} hrs
-                          </span>
-                        </div>
+                      <div className="flex flex-wrap items-center text-xs text-slate-500 gap-x-4 gap-y-1">
+                        <span className="font-mono text-slate-700 font-medium">
+                          {res.fecha}
+                        </span>
+                        <span className="font-mono text-slate-700">
+                          {res.hora_inicio.slice(0, 5)} — {res.hora_fin.slice(0, 5)} hrs
+                        </span>
                         {room?.ubicacion && (
-                          <div className="flex items-center">
-                            <MapPin className="w-3.5 h-3.5 mr-1 text-slate-400" />
-                            <span>{room.ubicacion}</span>
-                          </div>
-                        )}
-                        {room?.capacidad && (
-                          <div className="flex items-center">
-                            <Users className="w-3.5 h-3.5 mr-1 text-slate-400" />
-                            <span>Capacidad: {room.capacidad} personas</span>
-                          </div>
+                          <span className="flex items-center text-slate-400">
+                            <MapPin className="w-3 h-3 mr-1" />
+                            {room.ubicacion}
+                          </span>
                         )}
                       </div>
 
                       {res.motivo && (
-                        <p className="text-xs text-slate-500 pt-1">
-                          <span className="font-semibold text-slate-600">Motivo:</span> {res.motivo}
+                        <p className="text-xs text-slate-500 pt-0.5">
+                          <span className="font-medium text-slate-600">Motivo:</span> {res.motivo}
                         </p>
                       )}
                     </div>
 
-                    {/* Actions Panel */}
-                    <div className="flex flex-wrap items-center gap-2 pt-3 md:pt-0 border-t md:border-t-0 border-slate-100">
-                      {/* RF09: Status Dropdown */}
+                    {/* Actions Menu */}
+                    <div className="flex items-center space-x-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+                      {/* Status Dropdown */}
                       <div className="relative">
                         <button
                           onClick={() =>
                             setStatusMenuOpenId(statusMenuOpenId === res.id ? null : res.id)
                           }
-                          className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 transition flex items-center space-x-1"
+                          className="px-2.5 py-1 rounded-lg border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 flex items-center space-x-1"
                         >
                           <span>Estado</span>
                           <ChevronDown className="w-3 h-3 text-slate-400" />
                         </button>
 
                         {statusMenuOpenId === res.id && (
-                          <div className="absolute right-0 mt-1 w-40 bg-white border border-slate-200 rounded-xl shadow-lg z-20 py-1 text-xs">
+                          <div className="absolute right-0 mt-1 w-36 bg-white border border-slate-200 rounded-xl shadow-lg z-20 py-1 text-xs">
                             <button
                               onClick={() => handleStatusChange(res.id, 'pendiente')}
-                              className="w-full text-left px-3 py-1.5 hover:bg-amber-50 text-amber-800 font-medium"
+                              className="w-full text-left px-3 py-1.5 hover:bg-slate-50 font-medium text-slate-700"
                             >
                               Marcar Pendiente
                             </button>
                             <button
                               onClick={() => handleStatusChange(res.id, 'confirmada')}
-                              className="w-full text-left px-3 py-1.5 hover:bg-emerald-50 text-emerald-800 font-medium"
+                              className="w-full text-left px-3 py-1.5 hover:bg-emerald-50 font-medium text-emerald-700"
                             >
                               Marcar Confirmada
                             </button>
                             <button
                               onClick={() => handleStatusChange(res.id, 'finalizada')}
-                              className="w-full text-left px-3 py-1.5 hover:bg-indigo-50 text-indigo-800 font-medium"
+                              className="w-full text-left px-3 py-1.5 hover:bg-slate-50 font-medium text-slate-700"
                             >
                               Marcar Finalizada
                             </button>
                             <button
                               onClick={() => handleStatusChange(res.id, 'cancelada')}
-                              className="w-full text-left px-3 py-1.5 hover:bg-red-50 text-red-700 font-medium"
+                              className="w-full text-left px-3 py-1.5 hover:bg-red-50 font-medium text-red-600"
                             >
                               Marcar Cancelada
                             </button>
@@ -530,7 +474,7 @@ export default function DashboardClient({
                         )}
                       </div>
 
-                      {/* RF05: Edit Button (Only if not cancelled or completed) */}
+                      {/* Edit Button */}
                       {res.estado !== 'cancelada' && (
                         <button
                           onClick={() => {
@@ -538,25 +482,23 @@ export default function DashboardClient({
                             setEditingReservation(res);
                             setIsEditModalOpen(true);
                           }}
-                          className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 transition flex items-center space-x-1"
-                          title="Editar fecha, horario o sala"
+                          className="px-2.5 py-1 rounded-lg border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-50 flex items-center space-x-1"
                         >
-                          <Edit3 className="w-3.5 h-3.5 text-slate-500" />
+                          <Edit2 className="w-3 h-3 text-slate-400" />
                           <span>Editar</span>
                         </button>
                       )}
 
-                      {/* RF06: Cancel Button (with modal) */}
+                      {/* Cancel Button */}
                       {res.estado !== 'cancelada' && (
                         <button
                           onClick={() => {
                             setCancelingReservation(res);
                             setIsCancelModalOpen(true);
                           }}
-                          className="px-3 py-1.5 rounded-xl border border-red-200 text-xs font-medium text-red-600 bg-red-50/50 hover:bg-red-50 transition flex items-center space-x-1"
-                          title="Cancelar reservación y liberar sala"
+                          className="px-2.5 py-1 rounded-lg border border-red-200 text-xs font-medium text-red-600 hover:bg-red-50 flex items-center space-x-1"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-3 h-3" />
                           <span>Cancelar</span>
                         </button>
                       )}
@@ -570,57 +512,50 @@ export default function DashboardClient({
       </div>
 
       {/* ========================================================================= */}
-      {/* MODAL: NUEVA RESERVACIÓN (RF03, RF07, RF08, RNF08) */}
+      {/* MODAL: NUEVA RESERVACIÓN CON PRESETS DE HORARIO (RNF08) */}
       {/* ========================================================================= */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-              <div className="flex items-center space-x-2.5">
-                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
-                  <Calendar className="w-5 h-5" />
-                </div>
-                <h3 className="text-lg font-bold text-slate-900">Nueva Reservación</h3>
-              </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="font-bold text-sm text-slate-900">Reservar Turno de Estudio</h3>
               <button
                 onClick={() => setIsCreateModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100"
+                className="text-slate-400 hover:text-slate-600"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {formError && (
-              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start space-x-2.5 text-xs text-red-700">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-red-500 mt-0.5" />
+              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start space-x-2 text-xs text-red-700">
+                <AlertCircle className="w-4 h-4 shrink-0 text-red-500 mt-0.5" />
                 <span>{formError}</span>
               </div>
             )}
 
-            <form onSubmit={handleCreateSubmit} className="mt-5 space-y-4">
-              {/* Sala Selection (RF07) */}
+            <form id="createReservationForm" onSubmit={handleCreateSubmit} className="mt-4 space-y-3.5 text-xs">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Selecciona la Sala de Estudio *
+                <label className="block font-mono text-[11px] uppercase text-slate-500 mb-1">
+                  Cubículo / Sala *
                 </label>
                 <select
                   name="sala_id"
                   required
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-slate-50/50 focus:outline-none focus:ring-1 focus:ring-slate-900"
                 >
-                  <option value="">-- Elige una sala disponible --</option>
+                  <option value="">-- Selecciona un espacio --</option>
                   {salas.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.nombre} (Cap: {s.capacidad} pers.) - {s.ubicacion}
+                      {s.nombre} (Cap: {s.capacidad}) • {s.ubicacion}
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* Fecha (RF08) */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Fecha de la Reservación *
+                <label className="block font-mono text-[11px] uppercase text-slate-500 mb-1">
+                  Fecha de Reserva *
                 </label>
                 <input
                   type="date"
@@ -628,14 +563,52 @@ export default function DashboardClient({
                   required
                   min={new Date().toISOString().split('T')[0]}
                   defaultValue={new Date().toISOString().split('T')[0]}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-slate-50/50 focus:outline-none focus:ring-1 focus:ring-slate-900"
                 />
               </div>
 
-              {/* Horas Inicio y Fin (RF08) */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* Quick Preset Buttons */}
+              <div>
+                <label className="block font-mono text-[11px] uppercase text-slate-400 mb-1">
+                  Turnos rápidos de ejemplo
+                </label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      const form = e.currentTarget.closest('form');
+                      if (form) applyTimePreset(form, '09:00', '11:00');
+                    }}
+                    className="py-1 px-2 rounded-lg border border-slate-200 text-[11px] font-mono hover:bg-slate-100"
+                  >
+                    09:00 - 11:00
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      const form = e.currentTarget.closest('form');
+                      if (form) applyTimePreset(form, '11:30', '13:30');
+                    }}
+                    className="py-1 px-2 rounded-lg border border-slate-200 text-[11px] font-mono hover:bg-slate-100"
+                  >
+                    11:30 - 13:30
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      const form = e.currentTarget.closest('form');
+                      if (form) applyTimePreset(form, '14:00', '16:00');
+                    }}
+                    className="py-1 px-2 rounded-lg border border-slate-200 text-[11px] font-mono hover:bg-slate-100"
+                  >
+                    14:00 - 16:00
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block font-mono text-[11px] uppercase text-slate-500 mb-1">
                     Hora Inicio *
                   </label>
                   <input
@@ -643,11 +616,11 @@ export default function DashboardClient({
                     name="hora_inicio"
                     required
                     defaultValue="09:00"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-slate-50/50 font-mono"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block font-mono text-[11px] uppercase text-slate-500 mb-1">
                     Hora Fin *
                   </label>
                   <input
@@ -655,38 +628,37 @@ export default function DashboardClient({
                     name="hora_fin"
                     required
                     defaultValue="11:00"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-slate-50/50 font-mono"
                   />
                 </div>
               </div>
 
-              {/* Motivo */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Motivo / Objetivo del Estudio (Opcional)
+                <label className="block font-mono text-[11px] uppercase text-slate-500 mb-1">
+                  Motivo de Estudio
                 </label>
                 <textarea
                   name="motivo"
                   rows={2}
-                  placeholder="Ej. Estudio para examen final de Cálculo, Trabajo en equipo..."
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Ej. Preparación para proyecto de titulación..."
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-slate-50/50"
                 />
               </div>
 
-              <div className="pt-2 border-t border-slate-100 flex justify-end space-x-3">
+              <div className="pt-3 border-t border-slate-100 flex justify-end space-x-2">
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="px-4 py-2 border border-slate-200 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-50 transition"
+                  className="px-3 py-1.5 border border-slate-200 text-slate-700 rounded-lg font-medium"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-md shadow-indigo-200 transition disabled:opacity-50"
+                  className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-semibold shadow-sm transition disabled:opacity-50"
                 >
-                  {actionLoading ? 'Verificando y Reservando...' : 'Confirmar Reservación'}
+                  {actionLoading ? 'Verificando cupo...' : 'Confirmar Reservación'}
                 </button>
               </div>
             </form>
@@ -698,56 +670,51 @@ export default function DashboardClient({
       {/* MODAL: EDITAR RESERVACIÓN (RF05) */}
       {/* ========================================================================= */}
       {isEditModalOpen && editingReservation && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-              <div className="flex items-center space-x-2.5">
-                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
-                  <Edit3 className="w-5 h-5" />
-                </div>
-                <h3 className="text-lg font-bold text-slate-900">Editar Reservación</h3>
-              </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="font-bold text-sm text-slate-900">Editar Reservación</h3>
               <button
                 onClick={() => {
                   setIsEditModalOpen(false);
                   setEditingReservation(null);
                 }}
-                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100"
+                className="text-slate-400 hover:text-slate-600"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {formError && (
-              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start space-x-2.5 text-xs text-red-700">
-                <AlertTriangle className="w-4 h-4 shrink-0 text-red-500 mt-0.5" />
+              <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start space-x-2 text-xs text-red-700">
+                <AlertCircle className="w-4 h-4 shrink-0 text-red-500 mt-0.5" />
                 <span>{formError}</span>
               </div>
             )}
 
-            <form onSubmit={handleEditSubmit} className="mt-5 space-y-4">
+            <form onSubmit={handleEditSubmit} className="mt-4 space-y-3.5 text-xs">
               <input type="hidden" name="id" value={editingReservation.id} />
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block font-mono text-[11px] uppercase text-slate-500 mb-1">
                   Sala de Estudio *
                 </label>
                 <select
                   name="sala_id"
                   required
                   defaultValue={editingReservation.sala_id}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-slate-50/50"
                 >
                   {salas.map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.nombre} (Cap: {s.capacidad}) - {s.ubicacion}
+                      {s.nombre} (Cap: {s.capacidad})
                     </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block font-mono text-[11px] uppercase text-slate-500 mb-1">
                   Fecha *
                 </label>
                 <input
@@ -755,13 +722,13 @@ export default function DashboardClient({
                   name="fecha"
                   required
                   defaultValue={editingReservation.fecha}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-slate-50/50"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block font-mono text-[11px] uppercase text-slate-500 mb-1">
                     Hora Inicio *
                   </label>
                   <input
@@ -769,11 +736,11 @@ export default function DashboardClient({
                     name="hora_inicio"
                     required
                     defaultValue={editingReservation.hora_inicio.slice(0, 5)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-slate-50/50 font-mono"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block font-mono text-[11px] uppercase text-slate-500 mb-1">
                     Hora Fin *
                   </label>
                   <input
@@ -781,38 +748,38 @@ export default function DashboardClient({
                     name="hora_fin"
                     required
                     defaultValue={editingReservation.hora_fin.slice(0, 5)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-slate-50/50 font-mono"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block font-mono text-[11px] uppercase text-slate-500 mb-1">
                   Motivo
                 </label>
                 <textarea
                   name="motivo"
                   rows={2}
                   defaultValue={editingReservation.motivo || ''}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs bg-slate-50/50"
                 />
               </div>
 
-              <div className="pt-2 border-t border-slate-100 flex justify-end space-x-3">
+              <div className="pt-3 border-t border-slate-100 flex justify-end space-x-2">
                 <button
                   type="button"
                   onClick={() => {
                     setIsEditModalOpen(false);
                     setEditingReservation(null);
                   }}
-                  className="px-4 py-2 border border-slate-200 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-50 transition"
+                  className="px-3 py-1.5 border border-slate-200 text-slate-700 rounded-lg font-medium"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-md shadow-indigo-200 transition disabled:opacity-50"
+                  className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-semibold shadow-sm transition disabled:opacity-50"
                 >
                   {actionLoading ? 'Guardando...' : 'Guardar Cambios'}
                 </button>
@@ -826,46 +793,35 @@ export default function DashboardClient({
       {/* MODAL: CONFIRMACIÓN DE CANCELACIÓN (RF06) */}
       {/* ========================================================================= */}
       {isCancelModalOpen && cancelingReservation && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-100 text-center">
-            <div className="w-14 h-14 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Trash2 className="w-7 h-7" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-slate-200 text-left">
+            <div className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center mb-3">
+              <Trash2 className="w-4 h-4" />
             </div>
 
-            <h3 className="text-lg font-bold text-slate-900">¿Cancelar Reservación?</h3>
-            <p className="mt-2 text-xs text-slate-600 leading-relaxed">
-              Estás a punto de cancelar tu reservación en{' '}
-              <span className="font-semibold text-slate-800">
-                {cancelingReservation.sala?.nombre || 'la sala seleccionada'}
-              </span>{' '}
-              para el día <span className="font-semibold text-slate-800">{cancelingReservation.fecha}</span> de{' '}
-              <span className="font-semibold text-slate-800">
-                {cancelingReservation.hora_inicio.slice(0, 5)} a {cancelingReservation.hora_fin.slice(0, 5)}
-              </span>.
+            <h3 className="font-bold text-sm text-slate-900">¿Liberar y cancelar reservación?</h3>
+            <p className="mt-1.5 text-xs text-slate-500 leading-relaxed">
+              Cancelarás el turno en <span className="font-semibold text-slate-700">{cancelingReservation.sala?.nombre}</span> para el día <span className="font-semibold text-slate-700">{cancelingReservation.fecha}</span> ({cancelingReservation.hora_inicio.slice(0, 5)} - {cancelingReservation.hora_fin.slice(0, 5)}).
             </p>
 
-            <p className="mt-3 text-[11px] bg-amber-50 text-amber-800 p-2.5 rounded-xl border border-amber-200">
-              Esta acción liberará el espacio para que otros estudiantes de la biblioteca puedan utilizarlo.
-            </p>
-
-            <div className="mt-6 grid grid-cols-2 gap-3">
+            <div className="mt-5 flex justify-end space-x-2">
               <button
                 type="button"
                 onClick={() => {
                   setIsCancelModalOpen(false);
                   setCancelingReservation(null);
                 }}
-                className="py-2.5 px-4 border border-slate-200 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-50 transition"
+                className="px-3 py-1.5 border border-slate-200 text-slate-700 rounded-lg text-xs font-medium"
               >
-                No, mantener
+                Mantener turno
               </button>
               <button
                 type="button"
                 disabled={actionLoading}
                 onClick={handleConfirmCancel}
-                className="py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-semibold shadow-md shadow-red-200 transition disabled:opacity-50"
+                className="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold transition disabled:opacity-50"
               >
-                {actionLoading ? 'Cancelando...' : 'Sí, Cancelar'}
+                {actionLoading ? 'Cancelando...' : 'Sí, cancelar'}
               </button>
             </div>
           </div>

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
-import { BookOpen, UserPlus, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Layers, UserPlus, AlertCircle, CheckCircle2, ArrowRight, Mail, KeyRound, User } from 'lucide-react';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -24,27 +24,23 @@ export default function RegisterPage() {
     setError(null);
     setSuccessMessage(null);
 
-    // Validar nombre completo
     if (!nombreCompleto.trim()) {
       setError('Por favor ingresa tu nombre completo.');
       return;
     }
 
-    // Validación de correo institucional configurable
     const institutionalDomain = process.env.NEXT_PUBLIC_INSTITUTIONAL_EMAIL_DOMAIN;
     if (institutionalDomain && !email.toLowerCase().endsWith(institutionalDomain.toLowerCase())) {
-      setError(`Debes utilizar un correo institucional que termine en "${institutionalDomain}".`);
+      setError(`Debes usar un correo institucional que termine en "${institutionalDomain}".`);
       return;
     }
 
-    // Validar formato de correo básico
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setError('Ingresa un formato de correo electrónico válido.');
       return;
     }
 
-    // Validar contraseñas
     if (password.length < 6) {
       setError('La contraseña debe tener al menos 6 caracteres.');
       return;
@@ -76,7 +72,6 @@ export default function RegisterPage() {
         return;
       }
 
-      // Si Supabase tiene confirmación de correo desactivada (por defecto en local o según config), ya hay sesión
       if (data.session) {
         if (rol === 'admin') {
           router.push('/admin');
@@ -86,107 +81,105 @@ export default function RegisterPage() {
         router.refresh();
       } else {
         setSuccessMessage(
-          '¡Registro exitoso! Si tu proyecto tiene activada la confirmación por correo, por favor revisa tu bandeja de entrada para verificar tu cuenta antes de iniciar sesión.'
+          '¡Cuenta creada exitosamente! Puedes iniciar sesión de inmediato con tus credenciales.'
         );
         setLoading(false);
       }
     } catch (err: any) {
-      setError(err?.message || 'Error inesperado durante el registro.');
+      setError(err?.message || 'Error durante el registro.');
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-[90vh] flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full bg-white rounded-3xl p-8 sm:p-10 border border-slate-200/80 shadow-xl shadow-slate-200/50">
-        <div className="text-center">
-          <div className="mx-auto w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200 mb-4">
-            <BookOpen className="w-6 h-6" />
+    <div className="min-h-[90vh] flex items-center justify-center px-4 py-12 bg-slate-50 bg-grid-pattern">
+      <div className="w-full max-w-sm bg-white rounded-2xl p-7 border border-slate-200/90 shadow-sm">
+        <div className="text-left mb-6">
+          <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold mb-4">
+            <Layers className="w-4 h-4 text-emerald-400" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
-            Crear Cuenta Institucional
-          </h2>
-          <p className="mt-2 text-sm text-slate-600">
-            Regístrate para reservar salas de estudio de la biblioteca
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+            Nueva Cuenta
+          </h1>
+          <p className="mt-1 text-xs text-slate-500 font-normal">
+            Registro para reserva y uso de cubículos de biblioteca
           </p>
         </div>
 
         {error && (
-          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start space-x-3 text-red-700 text-sm">
-            <AlertCircle className="w-5 h-5 shrink-0 text-red-500 mt-0.5" />
-            <div>
-              <p className="font-semibold">Error en el registro</p>
-              <p className="mt-0.5 text-xs text-red-600">{error}</p>
-            </div>
+          <div className="mb-5 p-3 bg-red-50/80 border border-red-200 rounded-xl flex items-start space-x-2.5 text-xs text-red-700">
+            <AlertCircle className="w-4 h-4 shrink-0 text-red-500 mt-0.5" />
+            <span>{error}</span>
           </div>
         )}
 
-        {successMessage && (
-          <div className="mt-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start space-x-3 text-emerald-800 text-sm">
-            <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-600 mt-0.5" />
-            <div>
-              <p className="font-semibold">¡Cuenta creada!</p>
-              <p className="mt-0.5 text-xs text-emerald-700">{successMessage}</p>
-              <Link
-                href="/login"
-                className="mt-3 inline-flex items-center text-xs font-bold text-emerald-900 underline"
-              >
-                Ir a Iniciar Sesión <ArrowRight className="w-3 h-3 ml-1" />
-              </Link>
+        {successMessage ? (
+          <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs">
+            <div className="flex items-center space-x-2 font-bold mb-1">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <span>Registro exitoso</span>
             </div>
+            <p className="text-emerald-700">{successMessage}</p>
+            <Link
+              href="/login"
+              className="mt-3 inline-flex items-center text-xs font-bold text-slate-900 underline"
+            >
+              Iniciar Sesión ahora <ArrowRight className="w-3 h-3 ml-1" />
+            </Link>
           </div>
-        )}
-
-        {!successMessage && (
-          <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-3.5">
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+              <label className="block text-[11px] font-mono font-medium uppercase text-slate-500 mb-1">
                 Nombre Completo
               </label>
-              <input
-                type="text"
-                required
-                value={nombreCompleto}
-                onChange={(e) => setNombreCompleto(e.target.value)}
-                placeholder="Carlos Mendoza Silva"
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm transition"
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  required
+                  value={nombreCompleto}
+                  onChange={(e) => setNombreCompleto(e.target.value)}
+                  placeholder="Ej. Sofia Ramos"
+                  className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition bg-slate-50/50"
+                />
+                <User className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+              </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+              <label className="block text-[11px] font-mono font-medium uppercase text-slate-500 mb-1">
                 Correo Institucional
               </label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="cmendoza@universidad.edu"
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm transition"
-              />
-              <p className="mt-1 text-[11px] text-slate-400">
-                Usa tu correo institucional asignado por la universidad.
-              </p>
+              <div className="relative">
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="sramos@universidad.edu"
+                  className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition bg-slate-50/50"
+                />
+                <Mail className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                  Contraseña
+                <label className="block text-[11px] font-mono font-medium uppercase text-slate-500 mb-1">
+                  Clave
                 </label>
                 <input
                   type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Mínimo 6 caract."
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm transition"
+                  placeholder="Mín. 6"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition bg-slate-50/50"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                <label className="block text-[11px] font-mono font-medium uppercase text-slate-500 mb-1">
                   Confirmar
                 </label>
                 <input
@@ -194,24 +187,24 @@ export default function RegisterPage() {
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Repite clave"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm transition"
+                  placeholder="Repetir"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition bg-slate-50/50"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                Rol en la Institución
+              <label className="block text-[11px] font-mono font-medium uppercase text-slate-500 mb-1">
+                Rol
               </label>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl text-xs">
                 <button
                   type="button"
                   onClick={() => setRol('estudiante')}
-                  className={`py-2 px-3 rounded-xl border text-xs font-medium transition ${
+                  className={`py-1.5 rounded-lg font-semibold transition ${
                     rol === 'estudiante'
-                      ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-semibold'
-                      : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-900'
                   }`}
                 >
                   Estudiante
@@ -219,10 +212,10 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   onClick={() => setRol('admin')}
-                  className={`py-2 px-3 rounded-xl border text-xs font-medium transition ${
+                  className={`py-1.5 rounded-lg font-semibold transition ${
                     rol === 'admin'
-                      ? 'border-purple-600 bg-purple-50 text-purple-700 font-semibold'
-                      : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                      ? 'bg-white text-slate-900 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-900'
                   }`}
                 >
                   Administrador
@@ -233,13 +226,13 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-4 py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-md shadow-indigo-200 hover:shadow-indigo-300 transition-all flex items-center justify-center space-x-2 disabled:opacity-50"
+              className="w-full mt-3 py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs shadow-sm transition flex items-center justify-center space-x-2 disabled:opacity-50"
             >
               {loading ? (
-                <span className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                <span className="inline-block animate-spin rounded-full h-3.5 w-3.5 border-2 border-white border-t-transparent" />
               ) : (
                 <>
-                  <UserPlus className="w-4 h-4" />
+                  <UserPlus className="w-3.5 h-3.5" />
                   <span>Completar Registro</span>
                 </>
               )}
@@ -247,13 +240,13 @@ export default function RegisterPage() {
           </form>
         )}
 
-        <div className="mt-8 pt-6 border-t border-slate-100 text-center text-xs text-slate-600">
+        <div className="mt-6 pt-5 border-t border-slate-100 text-center text-xs text-slate-500">
           ¿Ya tienes cuenta?{' '}
           <Link
             href="/login"
-            className="font-semibold text-indigo-600 hover:text-indigo-800 transition inline-flex items-center"
+            className="font-semibold text-slate-900 hover:underline"
           >
-            Iniciar Sesión <ArrowRight className="w-3 h-3 ml-1" />
+            Iniciar Sesión
           </Link>
         </div>
       </div>
